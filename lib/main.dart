@@ -1,11 +1,11 @@
 
 
-import 'dart:convert';
 
 import 'package:flutter/material.dart';
 
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
+import 'dart:convert';
 
 void main() {
   runApp(MaterialApp(
@@ -53,6 +53,22 @@ class _HomeState extends State<Home> {
     });
   }
 
+  Future<Null> _refresh() async {
+    await Future.delayed(Duration(seconds: 1));
+
+    setState(() {
+      _toDoList.sort((a, b) {
+        if(a["ok"] && !b["ok"]) return 1;
+        else if (!a["ok"] && b["ok"]) return -1;
+        else return 0;
+      });
+
+      _saveData();
+    });
+
+    return null;
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -89,12 +105,13 @@ class _HomeState extends State<Home> {
           ),
           Expanded(
             child: RefreshIndicator(
-                //onRefresh: _refresh(),
-                child: ListView(
-                  children: <Widget>[
-
-                  ],
-                ),)
+                onRefresh: _refresh,
+                child: ListView.builder(
+                  padding: EdgeInsets.only(top: 10.0),
+                  itemCount: _toDoList.length,
+                    itemBuilder: buildItem
+                )
+            )
           )
         ],
       ),
@@ -146,6 +163,7 @@ class _HomeState extends State<Home> {
              duration: Duration(seconds: 2),
            );
 
+           Scaffold.of(context).removeCurrentSnackBar();
            Scaffold.of(context).showSnackBar(snackbar);
 
          });
@@ -155,11 +173,6 @@ class _HomeState extends State<Home> {
 
   /*
   */
-
-  Future<Null> refresh() async {
-
-    return null;
-  }
 
   Future<File> _getFile() async {
     final directory = await getApplicationDocumentsDirectory();
